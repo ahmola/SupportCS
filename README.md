@@ -20,7 +20,6 @@
 9. [구현 스코프](#9-구현-스코프)
 10. [레포지토리 구조](#10-레포지토리-구조)
 11. [설계 의사결정 기록 (ADR)](#11-설계-의사결정-기록-adr)
-12. [로드맵](#12-로드맵)
 
 ---
 
@@ -520,9 +519,8 @@ flowchart LR
 
 개발 과정 전반에 AI 코딩 에이전트를 활용하며, 그 방식 자체를 문서화합니다.
 
-- 레포 루트의 `CLAUDE.md`에 아키텍처 원칙·코딩 컨벤션·테스트 규칙을 명시해 에이전트 출력의 일관성 확보
+- 레포 루트의 `.agents/`에 아키텍처 원칙·코딩 컨벤션·테스트 규칙을 명시해 에이전트 출력의 일관성 확보
 - 에이전트가 작성한 코드도 동일한 CI 게이트(테스트·정적 분석)를 통과해야 머지
-- `docs/ai-workflow.md`에 에이전트 활용 방식, 잘 된 점과 한계를 회고 형식으로 기록
 
 ---
 
@@ -530,7 +528,7 @@ flowchart LR
 
 > 원칙: **넓게 설계하고, 좁게 구현하고, 깊게 문서화한다.**
 
-### ✅ 구현 (완성도 우선)
+### ✅ 구현
 
 - [ ] API Gateway — JWT 검증, 테넌트 컨텍스트 주입, 라우팅, Rate Limit
 - [ ] Auth/Tenant — 가입·로그인, 테넌트·멤버·RBAC
@@ -557,18 +555,23 @@ flowchart LR
 
 ```
 SupportCS/
+├── .agents/
+│   ├── AGENTS.md               # 메인 에이전트 규칙
+│   ├── services/**             # 백엔드 서비스용 에이전트 규칙
+│   ├── frontend/**             # 프론트엔드용 에이전트 규칙
+│   ├── sql/**                  # 스키마 정의
+├── .github/workflows/**        # Github Actions 기반 CI/CD 파이프라인
 ├── services/
-│   ├── api-gateway/            # Spring Cloud Gateway
-│   ├── auth-tenant-service/    # Spring Boot
-│   ├── ticket-service/         # Spring Boot
-│   ├── tool-adapter-service/   # Spring Boot
-│   ├── audit-service/          # Spring Boot
-│   └── agent-orchestrator/     # FastAPI
+│   ├── api-gateway/
+│   ├── auth-tenant-service/
+│   ├── ticket-service/
+│   ├── tool-adapter-service/
+│   ├── audit-service/
+│   └── agent-orchestrator/
 ├── frontend/
 │   ├── admin-console/          # 상담원/관리자 콘솔
 │   └── chat-widget/            # 고객용 임베드 위젯
-├── libs/
-│   └── event-schema/           # 공통 이벤트 스키마
+├── sql/**                      # 각 도메인 별 SQL
 ├── mock/
 │   └── external-order-api/     # 테넌트 주문/환불 시스템 Mock
 ├── infra/
@@ -578,9 +581,8 @@ SupportCS/
 ├── docs/
 │   ├── adr/                    # 설계 의사결정 기록
 │   ├── api/                    # OpenAPI 스펙
-│   └── ai-workflow.md          # 코딩 에이전트 활용 회고
+│   └── topic/                  # Kafka Topic
 ├── docker-compose.yml
-├── CLAUDE.md
 └── README.md
 ```
 
@@ -590,27 +592,14 @@ SupportCS/
 
 | # | 제목 | 상태 |
 |---|---|---|
-| 001 | MSA 서비스 경계를 6개로 정한 이유 | 작성 예정 |
-| 002 | Core Layer가 AI Layer에 의존하지 않도록 한 이유 | 작성 예정 |
-| 003 | AI의 비즈니스 접근을 Tool Adapter로 단일화한 이유 | 작성 예정 |
-| 004 | 실시간 채팅을 독립 서비스가 아닌 Ticket Service에 둔 이유 | 작성 예정 |
-| 005 | 멀티테넌시 논리 격리 선택과 물리 격리 전환 기준 | 작성 예정 |
-| 006 | Transactional Outbox 패턴 도입 | 작성 예정 |
-| 007 | Core는 Java, Orchestrator는 Python으로 분리한 이유 | 작성 예정 |
-| 008 | 위험도 기반 승인 게이트 설계 | 작성 예정 |
-
----
-
-## 12. 로드맵
-
-| 단계 | 기간 | 목표 |
-|---|---|---|
-| Phase 0 | 2주 | 설계 확정 — 도메인 모델, API 스펙, 이벤트 스키마, ADR 001~004 |
-| Phase 1 | 4주 | Core — Gateway, Auth/Tenant, Ticket(상태 머신·채팅), 로컬 docker compose |
-| Phase 2 | 4주 | AI — Orchestrator, Tool Adapter, 승인 게이트, 자동 분류 |
-| Phase 3 | 3주 | 거버넌스·관측 — Audit, 대시보드, OpenTelemetry 트레이싱 |
-| Phase 4 | 3주 | DevOps — Terraform, K8s, Argo CD, 부하 테스트 |
-| Phase 5 | 2주 | 마무리 — 데모 시나리오, 문서 정리, 회고 |
+| 001 | MSA 서비스 경계를 6개로 정한 이유 |
+| 002 | Core Layer가 AI Layer에 의존하지 않도록 한 이유 |
+| 003 | AI의 비즈니스 접근을 Tool Adapter로 단일화한 이유 |
+| 004 | 실시간 채팅을 독립 서비스가 아닌 Ticket Service에 둔 이유 |
+| 005 | 멀티테넌시 논리 격리 선택과 물리 격리 전환 기준 |
+| 006 | Transactional Outbox 패턴 도입 |
+| 007 | Core는 Java, Orchestrator는 Python으로 분리한 이유 |
+| 008 | 위험도 기반 승인 게이트 설계 |
 
 ---
 
